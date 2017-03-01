@@ -1,0 +1,82 @@
+<data description="single service for whole database" enableBatchRequests="false" enableBoxcarring="false" name="CustomerService" serviceNamespace="http://demo.wso2.com" serviceStatus="active">
+<config id="default">
+      <property name="org.wso2.ws.dataservice.driver">com.mysql.jdbc.Driver</property>
+      <property name="org.wso2.ws.dataservice.protocol">jdbc:mysql://mysql.storage.cloud.wso2.com:3306/Customers_manjulaorg</property>
+      <property name="org.wso2.ws.dataservice.user">xxxxx</property>
+      <property name="org.wso2.ws.dataservice.password">xxxxxx</property>
+      <property name="org.wso2.ws.dataservice.minpoolsize">1</property>
+      <property name="org.wso2.ws.dataservice.maxpoolsize">10</property>
+      <property name="org.wso2.ws.dataservice.validation_query"/>
+   </config>
+
+   <query id="select_with_key_Customers_query" useConfig="default">
+      <sql>SELECT id, company_name, email, project_description, used_products FROM Customers WHERE id=?</sql>
+      <param name="id" ordinal="1" paramType="SCALAR" sqlType="INTEGER" type="IN"/>
+      <result element="CustomersCollection" rowName="Customers">
+         <element column="id" name="id" xsdType="xs:integer"/>
+         <element column="company_name" name="company_name" xsdType="xs:string"/>
+         <element column="email" name="email" xsdType="xs:string"/>
+         <element column="project_description" name="project_description" xsdType="xs:string"/>
+         <element column="used_products" name="used_products" xsdType="xs:string"/>
+      </result>
+   </query>
+   <query id="insert_Customers_query" useConfig="default">
+      <sql>INSERT INTO Customers(company_name,email,project_description,used_products) VALUES(?,?,?,?)</sql>
+      <param name="company_name" ordinal="1" paramType="SCALAR" sqlType="STRING" type="IN"/>
+      <param name="email" ordinal="2" paramType="SCALAR" sqlType="STRING" type="IN"/>
+      <param name="project_description" ordinal="3" paramType="SCALAR" sqlType="STRING" type="IN"/>
+      <param name="used_products" ordinal="4" paramType="SCALAR" sqlType="STRING" type="IN"/>
+   </query>
+   <query id="select_all_Customers_query" useConfig="default">
+      <sql>SELECT id, company_name, email, project_description, used_products FROM Customers</sql>
+      <result element="CustomersCollection" rowName="Customers">
+         <element column="id" name="id" xsdType="xs:integer"/>
+         <element column="company_name" name="company_name" xsdType="xs:string"/>
+         <element column="email" name="email" xsdType="xs:string"/>
+         <element column="project_description" name="project_description" xsdType="xs:string"/>
+         <element column="used_products" name="used_products" xsdType="xs:string"/>
+      </result>
+   </query>
+   <query id="update_Customers_query" useConfig="default">
+      <sql>UPDATE Customers SET company_name=?,email=?,project_description=?,used_products=? WHERE id=?</sql>
+      <param name="company_name" ordinal="1" paramType="SCALAR" sqlType="STRING" type="IN"/>
+      <param name="email" ordinal="2" paramType="SCALAR" sqlType="STRING" type="IN"/>
+      <param name="project_description" ordinal="3" paramType="SCALAR" sqlType="STRING" type="IN"/>
+      <param name="used_products" ordinal="4" paramType="SCALAR" sqlType="STRING" type="IN"/>
+      <param name="id" ordinal="5" paramType="SCALAR" sqlType="INTEGER" type="IN"/>
+   </query>
+   <query id="delete_Customers_query" useConfig="default">
+      <sql>DELETE FROM Customers WHERE id=?</sql>
+      <param name="id" ordinal="1" paramType="SCALAR" sqlType="INTEGER" type="IN"/>
+   </query>
+   <operation name="insert_Customers_operation">
+      <call-query href="insert_Customers_query">
+         <with-param name="project_description" query-param="project_description"/>
+         <with-param name="company_name" query-param="company_name"/>
+         <with-param name="used_products" query-param="used_products"/>
+         <with-param name="email" query-param="email"/>
+      </call-query>
+   </operation>
+   <operation name="delete_Customers_operation">
+      <call-query href="delete_Customers_query">
+         <with-param name="id" query-param="id"/>
+      </call-query>
+   </operation>
+   <operation name="update_Customers_operation">
+      <call-query href="update_Customers_query">
+         <with-param name="project_description" query-param="project_description"/>
+         <with-param name="company_name" query-param="company_name"/>
+         <with-param name="id" query-param="id"/>
+         <with-param name="used_products" query-param="used_products"/>
+         <with-param name="email" query-param="email"/>
+      </call-query>
+   </operation>
+   <operation name="select_with_key_Customers_operation">
+      <call-query href="select_with_key_Customers_query">
+         <with-param name="id" query-param="id"/>
+      </call-query>
+   </operation>
+   <operation name="select_all_Customers_operation">
+      <call-query href="select_all_Customers_query"/>
+   </operation>
+</data>

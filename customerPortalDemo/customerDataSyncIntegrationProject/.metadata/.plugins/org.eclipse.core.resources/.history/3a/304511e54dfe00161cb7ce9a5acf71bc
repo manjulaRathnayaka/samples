@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<api context="/customers" name="customers" xmlns="http://ws.apache.org/ns/synapse">
+    <resource methods="POST">
+        <inSequence>
+            <log level="full"/>
+            <property expression="json-eval($.payloadEmail)" name="payloadEmail" scope="default" type="STRING"/>
+            <property expression="json-eval($.payloadCompanyName)" name="payloadCompanyName" scope="default" type="STRING"/>
+            <property expression="json-eval($.payloadProjectDesc)" name="payloadProjectDesc" scope="default" type="STRING"/>
+            <property expression="json-eval($.payloadUsedProducts)" name="payloadUsedProducts" scope="default" type="STRING"/>
+            <enrich>
+                <source clone="true" type="body"/>
+                <target property="REQUEST_PAYLOAD" type="property"/>
+            </enrich>
+            <header name="SOAPAction" scope="transport" value="urn:insert_Customers_operation"/>
+            <payloadFactory media-type="xml">
+                <format>
+                    <soapenv:Envelope xmlns:demo="http://demo.wso2.com" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+                        <soapenv:Header/>
+                        <soapenv:Body>
+                            <demo:insert_Customers_operation>
+                                <demo:company_name>$1</demo:company_name>
+                                <demo:email>$2</demo:email>
+                                <demo:project_description>$3</demo:project_description>
+                                <demo:used_products>$4</demo:used_products>
+                            </demo:insert_Customers_operation>
+                        </soapenv:Body>
+                    </soapenv:Envelope>
+                </format>
+                <args>
+                    <arg evaluator="xml" expression="get-property('payloadCompanyName')"/>
+                    <arg evaluator="xml" expression="get-property('payloadEmail')"/>
+                    <arg evaluator="xml" expression="get-property('payloadProjectDesc')"/>
+                    <arg evaluator="xml" expression="get-property('payloadUsedProducts')"/>
+                </args>
+            </payloadFactory>
+            <call>
+                <endpoint>
+                    <address format="soap11" uri="http://manjulaorg-customer-data-service-1-0-0.wso2apps.com/services/CustomerService.SOAP11Endpoint/"/>
+                </endpoint>
+            </call>
+            <enrich>
+                <source clone="true" property="REQUEST_PAYLOAD" type="property"/>
+                <target type="body"/>
+            </enrich>
+            <property expression="json-eval($.googlespreadsheetAccessToken)" name="googlespreadsheet.accessToken" scope="default" type="STRING"/>
+            <property expression="json-eval($.googlespreadsheetRefreshToken)" name="googlespreadsheet.refreshToken" scope="default" type="STRING"/>
+            <property expression="json-eval($.googlespreadsheetClientId)" name="googlespreadsheet.clientId" scope="default" type="STRING"/>
+            <property expression="json-eval($.googlespreadsheetClientSecret)" name="googlespreadsheet.clientSecret" scope="default" type="STRING"/>
+            <property expression="json-eval($.googlespreadsheetApiUrl)" name="googlespreadsheet.apiUrl" scope="default" type="STRING"/>
+            <property expression="json-eval($.spreadsheetId)" name="googlespreadsheet.spreadsheetId" scope="default" type="STRING"/>
+            <property expression="json-eval($.range)" name="googlespreadsheet.range" scope="default" type="STRING"/>
+            <property expression="json-eval($.valueInputOption)" name="googlespreadsheet.valueInputOption" scope="default" type="STRING"/>
+            <log level="custom">
+                <property expression="get-property('payloadCompanyName')" name="------------" xmlns:ns="http://org.apache.synapse/xsd"/>
+            </log>
+            <property name="value1" scope="default" type="STRING" value="value1"/>
+            <property name="value2" scope="default" type="STRING" value="value2"/>
+            <property name="value3" scope="default" type="STRING" value="value3"/>
+            <property name="fields" scope="operation" type="STRING" value="["/>
+            <property name="length" scope="operation" type="STRING" value=""/>
+            <property expression="fn:concat('[[&amp;apos;',get-property('value1'),get-property('value2'), '&amp;apos;]]')" name="ConcatenatedProperty" scope="default" type="STRING"/>
+            <property name="values" scope="default" type="STRING" value="[['22','23']]"/>
+            <script language="js"><![CDATA[var companyName = mc.getProperty("payloadCompanyName").toString(); 
+            var email = mc.getProperty("payloadEmail").toString(); 
+            var projectDesc = mc.getProperty("payloadProjectDesc").toString();
+            var usedProducts = mc.getProperty("payloadUsedProducts").toString();
+            var res = "[['".concat(companyName).concat("','").concat(email).concat("','").concat(projectDesc).concat("','").concat(usedProducts).concat("']]");
+           
+mc.setProperty("values",res);]]></script>
+            <log level="custom">
+                <property expression="get-property('values')" name="=================" xmlns:ns="http://org.apache.synapse/xsd"/>
+            </log>
+            <googlespreadsheet.init>
+                <accessToken>{$ctx:googlespreadsheet.accessToken}</accessToken>
+                <apiUrl>{$ctx:googlespreadsheet.apiUrl}</apiUrl>
+                <clientId>{$ctx:googlespreadsheet.clientId}</clientId>
+                <clientSecret>{$ctx:googlespreadsheet.clientSecret}</clientSecret>
+                <refreshToken>{$ctx:googlespreadsheet.refreshToken}</refreshToken>
+            </googlespreadsheet.init>
+            <googlespreadsheet.addRowsColumnsData>
+                <spreadsheetId>{$ctx:googlespreadsheet.spreadsheetId}</spreadsheetId>
+                <range>{$ctx:googlespreadsheet.range}</range>
+                <valueInputOption>{$ctx:googlespreadsheet.valueInputOption}</valueInputOption>
+                <values>{$ctx:values}</values>
+            </googlespreadsheet.addRowsColumnsData>
+            <property expression="$axis2:HTTP_SC" name="addRowsColumnsDataStatusCode" scope="default" type="STRING"/>
+            <filter regex="true" source="get-property('addRowsColumnsDataStatusCode') != 200">
+                <then>
+                    <log level="full"/>
+                    <property name="message" scope="default" type="STRING" value="Unable to Insert the row "/>
+                    <loopback/>
+                </then>
+                <else>
+                    <log level="full"/>
+                    <property name="message" scope="default" type="STRING" value="Success: Successfully Import the Data"/>
+                    <loopback/>
+                </else>
+            </filter>
+            <respond/>
+            <send/>
+        </inSequence>
+        <outSequence>
+            <property name="messageType" scope="axis2" type="STRING" value="application/json"/>
+            <log>
+                <property name="WhereAReWE" value="AT out sequence"/>
+            </log>
+            <payloadFactory media-type="json">
+                <format>
+                    {
+                    "Response":{
+                    "process":"ImportDataIntoSpreadsheet",
+                    "activityResponse":"$1"
+                    }
+                    }
+                </format>
+                <args>
+                    <arg evaluator="xml" expression="get-property('message')"/>
+                </args>
+            </payloadFactory>
+            <log/>
+            <send/>
+        </outSequence>
+        <faultSequence/>
+    </resource>
+</api>
